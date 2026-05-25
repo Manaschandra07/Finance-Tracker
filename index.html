@@ -315,14 +315,16 @@
         unsubsFirestore = db.collection("finance_data").where("uid", "==", uid).onSnapshot(snap => {
             entries = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             
-            const storedOrder = JSON.parse(localStorage.getItem(`clean_tracker_order_${uid}`));
-            if (storedOrder) {
-                const orderMap = new Map(storedOrder.map((id, index) => [id, index]));
-                entries.sort((a, b) => {
-                    const indexA = orderMap.has(a.id) ? orderMap.get(a.id) : 999999;
-                    const indexB = orderMap.has(b.id) ? orderMap.get(b.id) : 999999;
-                    return indexA - indexB;
-                });
+            if (!isReorderMode) {
+                const storedOrder = JSON.parse(localStorage.getItem(`clean_tracker_order_${uid}`));
+                if (storedOrder) {
+                    const orderMap = new Map(storedOrder.map((id, index) => [id, index]));
+                    entries.sort((a, b) => {
+                        const indexA = orderMap.has(a.id) ? orderMap.get(a.id) : 999999;
+                        const indexB = orderMap.has(b.id) ? orderMap.get(b.id) : 999999;
+                        return indexA - indexB;
+                    });
+                }
             }
             populateCategories();
             renderHome();
@@ -389,12 +391,12 @@
 
     function clearPressTimer() { if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; } }
 
+    // Refined desktop right-click drop-down handler tracking select targets natively
     function handleRightClickDelete(e) {
-        const val = e.target.value;
-        if(customCategories.includes(val)) {
-            e.preventDefault();
-            triggerCategoryDeletion(val);
-        }
+        e.preventDefault();
+        const selectEl = document.getElementById('f-category');
+        const selectedValue = selectEl.value;
+        triggerCategoryDeletion(selectedValue);
     }
 
     function handleCategorySelection(selectEl) {
@@ -650,7 +652,6 @@
         });
     }
 
-    // Dynamic Title handling embedded within scope mapping parameters explicitly
     function renderItemDetailsView(date) {
         const content = document.getElementById('analysis-content');
         const dayFilteredEntries = entries.filter(e => e.date === date);
