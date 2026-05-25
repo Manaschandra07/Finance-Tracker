@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Finance Tracker Pro</title>
 
-    <link rel="manifest" href="manifest.json">
+    <link class="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon.png">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -114,7 +114,7 @@
         td { padding: 15px 5px; border-top: 1px solid var(--border); font-size: 0.95rem; }
         .btn-delete { color: var(--expense); background: none; border: 1px solid var(--expense); padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 0.75rem; font-weight: bold; }
 
-        /* Inline Modification cell definitions */
+        /* Inline cell editing inputs */
         .editable-cell { cursor: pointer; border-bottom: 1px dashed var(--border); transition: background-color 0.2s; }
         .editable-cell:hover { background-color: rgba(56, 189, 248, 0.1); }
         .editable-cell input { background: #0f172a; color: white; padding: 4px; font-size: 0.95rem; border: 1px solid var(--primary); border-radius: 4px; width: 90%; }
@@ -313,17 +313,39 @@
         if(unsubsFirestore) unsubsFirestore();
         
         unsubsFirestore = db.collection("finance_data").where("uid", "==", uid).onSnapshot(snap => {
-            entries = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            const rawEntries = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             
+            // Apply sorting logic sequence strictly when reorder mode is turned OFF
             const storedOrder = JSON.parse(localStorage.getItem(`clean_tracker_order_${uid}`));
             if (storedOrder) {
                 const orderMap = new Map(storedOrder.map((id, index) => [id, index]));
-                entries.sort((a, b) => {
+                rawEntries.sort((a, b) => {
                     const indexA = orderMap.has(a.id) ? orderMap.get(a.id) : 999999;
                     const indexB = orderMap.has(b.id) ? orderMap.get(b.id) : 999999;
                     return indexA - indexB;
                 });
+            } else {
+                // Default fallback sorting sequence
+                rawEntries.sort((a, b) => new Date(b.date) - new Date(a.date));
             }
+            
+            // If reorder mode is active, prevent inbound Firestore snapshot resets from breaking user's working visual dragging index state
+            if (isReorderMode) {
+                const currentUIMap = new Map(entries.map((item, idx) => [item.id, idx]));
+                const matchedRawEntries = [];
+                const orphanedRawEntries = [];
+                
+                rawEntries.forEach(item => {
+                    if (currentUIMap.has(item.id)) matchedRawEntries.push(item);
+                    else orphanedRawEntries.push(item);
+                });
+                
+                matchedRawEntries.sort((a, b) => currentUIMap.get(a.id) - currentUIMap.get(b.id));
+                entries = [...matchedRawEntries, ...orphanedRawEntries];
+            } else {
+                entries = rawEntries;
+            }
+
             populateCategories();
             renderHome();
         });
@@ -390,11 +412,10 @@
     function clearPressTimer() { if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; } }
 
     function handleRightClickDelete(e) {
-        const val = e.target.value;
-        if(customCategories.includes(val)) {
-            e.preventDefault();
-            triggerCategoryDeletion(val);
-        }
+        e.preventDefault();
+        const selectEl = document.getElementById('f-category');
+        const selectedValue = selectEl.value;
+        triggerCategoryDeletion(selectedValue);
     }
 
     function handleCategorySelection(selectEl) {
@@ -523,9 +544,20 @@
         isReorderMode = !isReorderMode;
         const btn = document.getElementById('reorder-toggle-btn');
         const thAction = document.getElementById('th-action-header');
-        if (isReorderMode) { btn.innerText = "Reorder Mode: ON"; btn.classList.add('active-mode'); thAction.style.display = 'none'; } 
-        else { btn.innerText = "Reorder Mode: OFF"; btn.classList.remove('active-mode'); thAction.style.display = ''; }
-        renderHome();
+        
+        if (isReorderMode) { 
+            btn.innerText = "Reorder Mode: ON"; 
+            btn.classList.add('active-mode'); 
+            thAction.style.display = 'none'; 
+            renderHome();
+        } else { 
+            btn.innerText = "Reorder Mode: OFF"; 
+            btn.classList.remove('active-mode'); 
+            thAction.style.display = ''; 
+            // Save layout states down to tracking vectors on mode toggle release
+            syncIndexStateSequence();
+            renderHome();
+        }
     }
 
     function handleDragStart(e, id) { if (!isReorderMode) return; draggedRowIndex = entries.findIndex(item => item.id === id); e.dataTransfer.effectAllowed = 'move'; }
@@ -544,16 +576,29 @@
         if (targetIndex !== -1 && targetIndex !== draggedRowIndex) {
             const [movedItem] = entries.splice(draggedRowIndex, 1);
             entries.splice(targetIndex, 0, movedItem);
-            syncIndexStateSequence();
             renderHome();
         }
         draggedRowIndex = null;
     }
 
+    // Direct sorting engine rendering list architecture completely as it is or via latest dates
     function getSortedDisplayList(filteredList) {
         if (isReorderMode) {
             const indexMap = new Map(entries.map((item, idx) => [item.id, idx]));
             return [...filteredList].sort((a, b) => indexMap.get(a.id) - indexMap.get(b.id));
+        }
+        
+        const user = auth.currentUser;
+        if (user) {
+            const storedOrder = JSON.parse(localStorage.getItem(`clean_tracker_order_${user.uid}`));
+            if (storedOrder) {
+                const orderMap = new Map(storedOrder.map((id, index) => [id, index]));
+                return [...filteredList].sort((a, b) => {
+                    const indexA = orderMap.has(a.id) ? orderMap.get(a.id) : 999999;
+                    const indexB = orderMap.has(b.id) ? orderMap.get(b.id) : 999999;
+                    return indexA - indexB;
+                });
+            }
         }
         return [...filteredList].sort((a, b) => new Date(b.date) - new Date(a.date));
     }
@@ -650,7 +695,6 @@
         });
     }
 
-    // Dynamic Title handling embedded within scope mapping parameters explicitly
     function renderItemDetailsView(date) {
         const content = document.getElementById('analysis-content');
         const dayFilteredEntries = entries.filter(e => e.date === date);
