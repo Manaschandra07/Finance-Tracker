@@ -114,6 +114,11 @@
         td { padding: 15px 5px; border-top: 1px solid var(--border); font-size: 0.95rem; }
         .btn-delete { color: var(--expense); background: none; border: 1px solid var(--expense); padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 0.75rem; font-weight: bold; }
 
+        /* Inline Modification cell definitions */
+        .editable-cell { cursor: pointer; border-bottom: 1px dashed var(--border); transition: background-color 0.2s; }
+        .editable-cell:hover { background-color: rgba(56, 189, 248, 0.1); }
+        .editable-cell input { background: #0f172a; color: white; padding: 4px; font-size: 0.95rem; border: 1px solid var(--primary); border-radius: 4px; width: 90%; }
+
         /* Drag Actions styles */
         .reorder-active-row { border: 2px dashed var(--primary) !important; background-color: rgba(56, 189, 248, 0.15) !important; cursor: grab; touch-action: none; }
         .reorder-active-row:active { cursor: grabbing; }
@@ -130,6 +135,7 @@
         .rank-badge { background: var(--primary); color: #000; padding: 2px 10px; border-radius: 6px; margin-right: 10px; font-size: 0.8rem; font-weight: bold; }
         .val-income { color: var(--income); font-weight: bold; }
         .val-expense { color: var(--expense); font-weight: bold; }
+        .val-normal { color: var(--text-main); font-weight: bold; }
         .back-btn { background: transparent; border: 1px solid var(--border); color: var(--text-muted); padding: 8px 15px; border-radius: 8px; cursor: pointer; margin-bottom: 20px; font-weight: bold; }
         .search-container { margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; gap: 10px; position: relative; }
         .search-input { padding-left: 35px; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z' /%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: 10px center; background-size: 18px; flex-grow: 1; }
@@ -186,7 +192,13 @@
                     <div class="input-group"><label>Date</label><input type="date" id="f-date" required></div>
                     <div class="input-group"><label>Description</label><input type="text" id="f-desc" placeholder="e.g. Salary, Rent" required></div>
                     <div class="input-group"><label>Amount (₹)</label><input type="number" step="0.01" id="f-amount" placeholder="0.00" required></div>
-                    <div class="input-group"><label>Type</label><select id="f-type"><option value="expense">Expense (-)</option><option value="income">Income (+)</option></select></div>
+                    <div class="input-group"><label>Type</label>
+                        <select id="f-type">
+                            <option value="expense">Expense (-)</option>
+                            <option value="income">Income (+)</option>
+                            <option value="normal">Normal ( )</option>
+                        </select>
+                    </div>
                     <div class="input-group">
                         <label>Category</label>
                         <select id="f-category" onchange="handleCategorySelection(this)">
@@ -300,7 +312,6 @@
     function startSync(uid) {
         if(unsubsFirestore) unsubsFirestore();
         
-        // Collection mapped precisely to finance_data path parameter targets
         unsubsFirestore = db.collection("finance_data").where("uid", "==", uid).onSnapshot(snap => {
             entries = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             
@@ -344,32 +355,47 @@
         select.removeEventListener('mouseleave', clearPressTimer);
         select.removeEventListener('touchstart', startPressTimer);
         select.removeEventListener('touchend', clearPressTimer);
+        select.removeEventListener('contextmenu', handleRightClickDelete);
 
         select.addEventListener('mousedown', startPressTimer);
         select.addEventListener('mouseup', clearPressTimer);
         select.addEventListener('mouseleave', clearPressTimer);
         select.addEventListener('touchstart', startPressTimer, {passive: true});
         select.addEventListener('touchend', clearPressTimer);
+        select.addEventListener('contextmenu', handleRightClickDelete);
+    }
+
+    function triggerCategoryDeletion(val) {
+        if (customCategories.includes(val)) {
+            if (confirm(`Do you want to completely delete the custom category "${val}"?`)) {
+                customCategories = customCategories.filter(cat => cat !== val);
+                localStorage.setItem('clean_tracker_categories', JSON.stringify(customCategories));
+                populateCategories();
+                document.getElementById('f-category').value = 'Food';
+            }
+            return true;
+        }
+        return false;
     }
 
     function startPressTimer(e) {
         clearPressTimer();
         const selectEl = document.getElementById('f-category');
         const selectedValue = selectEl.value;
-
-        if (customCategories.includes(selectedValue)) {
-            longPressTimer = setTimeout(() => {
-                if (confirm(`Do you want to completely delete the custom category "${selectedValue}"?`)) {
-                    customCategories = customCategories.filter(cat => cat !== selectedValue);
-                    localStorage.setItem('clean_tracker_categories', JSON.stringify(customCategories));
-                    populateCategories();
-                    selectEl.value = 'Food';
-                }
-            }, 1000);
-        }
+        longPressTimer = setTimeout(() => {
+            triggerCategoryDeletion(selectedValue);
+        }, 1000);
     }
 
     function clearPressTimer() { if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; } }
+
+    function handleRightClickDelete(e) {
+        const val = e.target.value;
+        if(customCategories.includes(val)) {
+            e.preventDefault();
+            triggerCategoryDeletion(val);
+        }
+    }
 
     function handleCategorySelection(selectEl) {
         if (selectEl.value === 'Custom') {
@@ -433,14 +459,12 @@
             amount: parseFloat(document.getElementById('f-amount').value),
             type: document.getElementById('f-type').value
         };
-        // Collection reference updated safely to finance_data path parameter targets
         await db.collection("finance_data").add(newEntry);
         e.target.reset();
         document.getElementById('f-date').valueAsDate = new Date();
         populateCategories();
     });
 
-    // Collection reference updated safely to finance_data path parameter targets
     async function deleteEntry(id) { if(confirm("Delete entry?")) await db.collection("finance_data").doc(id).delete(); }
 
     // --- UI HELPERS ---
@@ -450,6 +474,28 @@
 
     function formatINR(amt) { return '₹' + parseFloat(amt).toLocaleString('en-IN', { minimumFractionDigits: 2 }); }
     function prettyDate(d) { const [y, m, day] = d.split('-'); return `${day}-${m}-${y}`; }
+
+    function makeEditable(el, entryId, field) {
+        if (isReorderMode || el.querySelector('input')) return;
+        const currentVal = el.innerText.replace('₹', '').replace(/,/g, '').replace('+', '').replace('-', '').trim();
+        const input = document.createElement('input');
+        input.type = field === 'amount' ? 'number' : 'text';
+        if(field === 'amount') input.step = '0.01';
+        input.value = currentVal;
+        
+        const saveChanges = async () => {
+            if (field === 'amount') {
+                const parsed = parseFloat(input.value);
+                await db.collection("finance_data").doc(entryId).update({ amount: isNaN(parsed) ? 0 : parsed });
+            } else {
+                await db.collection("finance_data").doc(entryId).update({ desc: input.value.trim() });
+            }
+        };
+
+        input.addEventListener('keydown', (e) => { if (e.key === 'Enter') saveChanges(); });
+        input.addEventListener('blur', saveChanges);
+        el.innerHTML = ''; el.appendChild(input); input.focus();
+    }
 
     function toggleReorderMode() {
         isReorderMode = !isReorderMode;
@@ -462,7 +508,7 @@
 
     function handleDragStart(e, id) { if (!isReorderMode) return; draggedRowIndex = entries.findIndex(item => item.id === id); e.dataTransfer.effectAllowed = 'move'; }
     function handleDragOver(e) { if (!isReorderMode) return; e.preventDefault(); }
-    function handleDrop(e, targetId) { if (!isReorderMode || draggedRowIndex === null) return; e.preventDefault(); executeArrayShift(targetId); }
+    function handleDrop(targetId) { if (!isReorderMode || draggedRowIndex === null) return; executeArrayShift(targetId); }
     function handleTouchStart(e, id) { if (!isReorderMode) return; draggedRowIndex = entries.findIndex(item => item.id === id); touchStartY = e.touches[0].clientY; }
     function handleTouchMove(e) { if (!isReorderMode || draggedRowIndex === null) return; e.preventDefault(); }
     function handleTouchEnd(e, targetId) {
@@ -471,6 +517,7 @@
         else draggedRowIndex = null;
     }
 
+    // Function updated to fix explicit touch drop targets natively
     function executeArrayShift(targetId) {
         const targetIndex = entries.findIndex(item => item.id === targetId);
         if (targetIndex !== -1 && targetIndex !== draggedRowIndex) {
@@ -500,22 +547,32 @@
         const monthData = entries.filter(e => e.date.startsWith(selMonth));
         const filtered = monthData.filter(e => e.desc.toLowerCase().includes(query) || (e.category && e.category.toLowerCase().includes(query)));
 
-        let tIn = 0, tOut = 0, dailyMap = {};
+        let tIn = 0, tOut = 0, netBalance = 0, dailyMap = {};
+        
+        // Revised calculation engine parameters ensuring Normal transactions bypass card metrics but modify net metrics directly
         monthData.forEach(e => {
-            if(e.type === 'income') tIn += e.amount;
-            else { tOut += e.amount; dailyMap[e.date] = (dailyMap[e.date] || 0) + e.amount; }
+            if (e.type === 'income') {
+                tIn += e.amount;
+                netBalance += e.amount;
+            } else if (e.type === 'expense') {
+                tOut += e.amount;
+                netBalance -= e.amount;
+                dailyMap[e.date] = (dailyMap[e.date] || 0) + e.amount;
+            } else if (e.type === 'normal') {
+                netBalance -= e.amount; 
+            }
         });
 
         getSortedDisplayList(filtered).forEach(e => {
-            let prefix = e.type === 'income' ? '+' : '-';
-            let reorderAttrs = isReorderMode ? `draggable="true" ondragstart="handleDragStart(event, '${e.id}')" ondragover="handleDragOver(event)" ondrop="handleDrop(event, '${e.id}')" ontouchstart="handleTouchStart(event, '${e.id}')" ontouchmove="handleTouchMove(event)" ontouchend="handleTouchEnd(event, '${e.id}')"` : '';
+            let prefix = e.type === 'income' ? '+' : (e.type === 'expense' ? '-' : '');
+            let reorderAttrs = isReorderMode ? `draggable="true" ondragstart="handleDragStart(event, '${e.id}')" ondragover="handleDragOver(event)" ondrop="handleDrop('${e.id}')" ontouchstart="handleTouchStart(event, '${e.id}')" ontouchmove="handleTouchMove(event)" ontouchend="handleTouchEnd(event, '${e.id}')"` : '';
             let rowClass = isReorderMode ? 'class="reorder-active-row"' : '';
             let categoryDisplay = e.category ? e.category : '—';
             
             txList.insertAdjacentHTML('beforeend', `<tr ${rowClass} ${reorderAttrs}>
                 <td style="color:var(--text-muted);">${prettyDate(e.date)}</td>
-                <td>${e.desc}</td>
-                <td class="val-${e.type}">${prefix}${formatINR(e.amount)}</td>
+                <td class="${isReorderMode ? '' : 'editable-cell'}" onclick="makeEditable(this, '${e.id}', 'desc')">${e.desc}</td>
+                <td class="val-${e.type} ${isReorderMode ? '' : 'editable-cell'}" onclick="makeEditable(this, '${e.id}', 'amount')">${prefix}${formatINR(e.amount)}</td>
                 <td style="color:var(--text-muted); user-select:none;">${categoryDisplay}</td>
                 <td style="${isReorderMode ? 'display:none;' : ''}">
                     <button class="btn-delete" onclick="deleteEntry('${e.id}')">Delete</button>
@@ -525,10 +582,10 @@
 
         document.getElementById('m-earned').innerText = formatINR(tIn);
         document.getElementById('m-spent').innerText = formatINR(tOut);
-        const net = tIn - tOut;
+        
         const netEl = document.getElementById('m-net');
-        netEl.innerText = formatINR(net);
-        netEl.className = 'stat-value ' + (net >= 0 ? 'val-income' : 'val-expense');
+        netEl.innerText = formatINR(netBalance);
+        netEl.className = 'stat-value ' + (netBalance >= 0 ? 'val-income' : 'val-expense');
 
         const rankedDays = Object.keys(dailyMap).map(d => ({ date: d, total: dailyMap[d] })).sort((a,b) => b.total - a.total);
         rankedDays.forEach((day, i) => {
@@ -553,7 +610,7 @@
         let months = {};
         entries.forEach(e => { if(e.type === 'expense') { const m = e.date.substring(0,7); months[m] = (months[m] || 0) + e.amount; } });
         
-        Object.keys(months).sort().reverse().forEach(m => {
+        Object.keys(months).sort().forEach(m => {
             const [y, mo] = m.split('-');
             content.insertAdjacentHTML('beforeend', `<div class="list-item" onclick="navigateTo('analysis-days', { mKey: '${m}' })"><div><span style="font-weight:700">${monthNames[parseInt(mo)-1]} ${y}</span><br><small style="color:var(--text-muted)">Total Monthly Spend</small></div><span class="val-expense">${formatINR(months[m])}</span></div>`);
         });
@@ -568,7 +625,7 @@
         content.innerHTML = `<button class="back-btn" onclick="window.history.back()">⬅ Back to Months</button><h1>${monthNameWithYear} Daily Analysis</h1>` + buildInlineCategoryBreakdown(monthFilteredEntries);
         let days = {}; monthFilteredEntries.forEach(e => { if(e.type === 'expense') { days[e.date] = (days[e.date] || 0) + e.amount; } });
         
-        Object.keys(days).sort().reverse().forEach(d => {
+        Object.keys(days).sort().forEach(d => {
             content.insertAdjacentHTML('beforeend', `<div class="list-item" onclick="navigateTo('analysis-items', { date: '${d}' })"><span>${prettyDate(d)}</span><span class="val-expense">${formatINR(days[d])}</span></div>`);
         });
     }
@@ -578,7 +635,8 @@
         const dayFilteredEntries = entries.filter(e => e.date === date);
         
         content.innerHTML = `<button class="back-btn" onclick="window.history.back()">⬅ Back</button><h1>${prettyDate(date)} Purchased Items</h1>` + buildInlineCategoryBreakdown(dayFilteredEntries);
-        dayFilteredEntries.forEach(e => {
+        
+        dayFilteredEntries.sort((a,b) => b.ts - a.ts).forEach(e => {
             if(e.type === 'expense') {
                 content.insertAdjacentHTML('beforeend', `<div class="list-item" style="cursor:default"><span>${e.desc}</span><span class="val-expense">${formatINR(e.amount)}</span></div>`);
             }
@@ -602,7 +660,6 @@
             const rows = reader.result.split('\n').slice(1);
             const user = auth.currentUser;
             
-            // Sequential block execution parsing logic engine
             const writePromises = rows.filter(row => row.trim()).map(async row => {
                 const fields = row.split(',');
                 let date, desc, category, amount, type;
@@ -612,7 +669,6 @@
                     [date, desc, amount, type] = fields;
                     category = '';
                 }
-                // Collection reference maps cleanly to finance_data destination targets
                 return db.collection("finance_data").add({ 
                     uid: user.uid, ts: Date.now(), date, desc, category, amount: parseFloat(amount), type: type.trim() 
                 });
