@@ -119,12 +119,6 @@
         .editable-cell:hover { background-color: rgba(56, 189, 248, 0.1); }
         .editable-cell input { background: #0f172a; color: white; padding: 4px; font-size: 0.95rem; border: 1px solid var(--primary); border-radius: 4px; width: 90%; }
 
-        /* Drag Actions styles */
-        .reorder-active-row { border: 2px dashed var(--primary) !important; background-color: rgba(56, 189, 248, 0.15) !important; cursor: grab; touch-action: none; }
-        .reorder-active-row:active { cursor: grabbing; }
-        .btn-toggle-reorder { background: none; border: 1px solid var(--border); color: var(--text-muted); padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.8rem; font-weight: bold; transition: 0.2s; white-space: nowrap; }
-        .btn-toggle-reorder.active-mode { color: #000; background-color: var(--accent); border-color: var(--accent); }
-
         /* Responsive Subview Grid Frameworks */
         .analysis-cat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 30px; margin-top: 15px; }
         @media (max-width: 768px) { .analysis-cat-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; } }
@@ -202,7 +196,7 @@
                     <div class="input-group">
                         <label>Category</label>
                         <select id="f-category" onchange="handleCategorySelection(this)">
-                            </select>
+                        </select>
                     </div>
                     <button type="submit" class="add-btn">Save Entry</button>
                 </form>
@@ -213,9 +207,8 @@
                     <h3>Transaction History</h3>
                     <div class="search-container">
                         <input type="text" id="search-bar" class="search-input" placeholder="Search items..." oninput="renderHome()">
-                        <button id="reorder-toggle-btn" class="btn-toggle-reorder" onclick="toggleReorderMode()">Reorder Mode: OFF</button>
                     </div>
-                    <table><thead><tr><th>Date</th><th>Item</th><th>Amount</th><th>Category</th><th id="th-action-header">Action</th></tr></thead><tbody id="tx-list"></tbody></table>
+                    <table><thead><tr><th>Date</th><th>Item</th><th>Amount</th><th>Category</th><th>Action</th></tr></thead><tbody id="tx-list"></tbody></table>
                     <div class="admin-tools">
                         <button class="btn-outline" onclick="exportCSV()">Export Backup (.csv)</button>
                         <button class="btn-outline" onclick="document.getElementById('import-file').click()">Import Backup</button>
@@ -256,10 +249,7 @@
     const auth = firebase.auth();
     let entries = [];
     let customCategories = JSON.parse(localStorage.getItem('clean_tracker_categories')) || [];
-    let isReorderMode = false;
-    let draggedRowIndex = null;
     let longPressTimer = null;
-    let touchStartY = 0;
     let unsubsFirestore = null;
 
     // --- AUTH ---
@@ -313,50 +303,12 @@
         if(unsubsFirestore) unsubsFirestore();
         
         unsubsFirestore = db.collection("finance_data").where("uid", "==", uid).onSnapshot(snap => {
-            const rawEntries = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            
-            // Apply sorting logic sequence strictly when reorder mode is turned OFF
-            const storedOrder = JSON.parse(localStorage.getItem(`clean_tracker_order_${uid}`));
-            if (storedOrder) {
-                const orderMap = new Map(storedOrder.map((id, index) => [id, index]));
-                rawEntries.sort((a, b) => {
-                    const indexA = orderMap.has(a.id) ? orderMap.get(a.id) : 999999;
-                    const indexB = orderMap.has(b.id) ? orderMap.get(b.id) : 999999;
-                    return indexA - indexB;
-                });
-            } else {
-                // Default fallback sorting sequence
-                rawEntries.sort((a, b) => new Date(b.date) - new Date(a.date));
-            }
-            
-            // If reorder mode is active, prevent inbound Firestore snapshot resets from breaking user's working visual dragging index state
-            if (isReorderMode) {
-                const currentUIMap = new Map(entries.map((item, idx) => [item.id, idx]));
-                const matchedRawEntries = [];
-                const orphanedRawEntries = [];
-                
-                rawEntries.forEach(item => {
-                    if (currentUIMap.has(item.id)) matchedRawEntries.push(item);
-                    else orphanedRawEntries.push(item);
-                });
-                
-                matchedRawEntries.sort((a, b) => currentUIMap.get(a.id) - currentUIMap.get(b.id));
-                entries = [...matchedRawEntries, ...orphanedRawEntries];
-            } else {
-                entries = rawEntries;
-            }
-
+            entries = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            // Sort by Date Descending
+            entries.sort((a, b) => new Date(b.date) - new Date(a.date));
             populateCategories();
             renderHome();
         });
-    }
-
-    function syncIndexStateSequence() {
-        const user = auth.currentUser;
-        if(user) {
-            const currentSequenceIds = entries.map(e => e.id);
-            localStorage.setItem(`clean_tracker_order_${user.uid}`, JSON.stringify(currentSequenceIds));
-        }
     }
 
     function populateCategories() {
@@ -442,7 +394,6 @@
     function handleNavClick(tabId) { if (tabId === 'home') navigateTo('home'); else if (tabId === 'analysis') navigateTo('analysis-months'); }
 
     function navigateTo(viewId, params = {}, pushState = true) {
-        if (isReorderMode && viewId !== 'home') toggleReorderMode();
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
         document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
         if (pushState) window.history.pushState({ viewId, params }, '', '');
@@ -497,7 +448,7 @@
     function prettyDate(d) { const [y, m, day] = d.split('-'); return `${day}-${m}-${y}`; }
 
     function makeEditable(el, entryId, field) {
-        if (isReorderMode || el.querySelector('input')) return;
+        if (el.querySelector('input')) return;
         
         const originalHTML = el.innerHTML;
         const currentVal = el.innerText.replace('₹', '').replace(/,/g, '').replace('+', '').replace('-', '').trim();
@@ -540,69 +491,6 @@
         input.focus();
     }
 
-    function toggleReorderMode() {
-        isReorderMode = !isReorderMode;
-        const btn = document.getElementById('reorder-toggle-btn');
-        const thAction = document.getElementById('th-action-header');
-        
-        if (isReorderMode) { 
-            btn.innerText = "Reorder Mode: ON"; 
-            btn.classList.add('active-mode'); 
-            thAction.style.display = 'none'; 
-            renderHome();
-        } else { 
-            btn.innerText = "Reorder Mode: OFF"; 
-            btn.classList.remove('active-mode'); 
-            thAction.style.display = ''; 
-            // Save layout states down to tracking vectors on mode toggle release
-            syncIndexStateSequence();
-            renderHome();
-        }
-    }
-
-    function handleDragStart(e, id) { if (!isReorderMode) return; draggedRowIndex = entries.findIndex(item => item.id === id); e.dataTransfer.effectAllowed = 'move'; }
-    function handleDragOver(e) { if (!isReorderMode) return; e.preventDefault(); }
-    function handleDrop(targetId) { if (!isReorderMode || draggedRowIndex === null) return; executeArrayShift(targetId); }
-    function handleTouchStart(e, id) { if (!isReorderMode) return; draggedRowIndex = entries.findIndex(item => item.id === id); touchStartY = e.touches[0].clientY; }
-    function handleTouchMove(e) { if (!isReorderMode || draggedRowIndex === null) return; e.preventDefault(); }
-    function handleTouchEnd(e, targetId) {
-        if (!isReorderMode || draggedRowIndex === null) return;
-        if (Math.abs(touchStartY - e.changedTouches[0].clientY) > 10) executeArrayShift(targetId);
-        else draggedRowIndex = null;
-    }
-
-    function executeArrayShift(targetId) {
-        const targetIndex = entries.findIndex(item => item.id === targetId);
-        if (targetIndex !== -1 && targetIndex !== draggedRowIndex) {
-            const [movedItem] = entries.splice(draggedRowIndex, 1);
-            entries.splice(targetIndex, 0, movedItem);
-            renderHome();
-        }
-        draggedRowIndex = null;
-    }
-
-    // Direct sorting engine rendering list architecture completely as it is or via latest dates
-    function getSortedDisplayList(filteredList) {
-        if (isReorderMode) {
-            const indexMap = new Map(entries.map((item, idx) => [item.id, idx]));
-            return [...filteredList].sort((a, b) => indexMap.get(a.id) - indexMap.get(b.id));
-        }
-        
-        const user = auth.currentUser;
-        if (user) {
-            const storedOrder = JSON.parse(localStorage.getItem(`clean_tracker_order_${user.uid}`));
-            if (storedOrder) {
-                const orderMap = new Map(storedOrder.map((id, index) => [id, index]));
-                return [...filteredList].sort((a, b) => {
-                    const indexA = orderMap.has(a.id) ? orderMap.get(a.id) : 999999;
-                    const indexB = orderMap.has(b.id) ? orderMap.get(b.id) : 999999;
-                    return indexA - indexB;
-                });
-            }
-        }
-        return [...filteredList].sort((a, b) => new Date(b.date) - new Date(a.date));
-    }
-
     function renderHome() {
         const selMonth = document.getElementById('view-month').value;
         const query = document.getElementById('search-bar').value.toLowerCase();
@@ -628,18 +516,16 @@
             }
         });
 
-        getSortedDisplayList(filtered).forEach(e => {
+        filtered.forEach(e => {
             let prefix = e.type === 'income' ? '+' : (e.type === 'expense' ? '-' : '');
-            let reorderAttrs = isReorderMode ? `draggable="true" ondragstart="handleDragStart(event, '${e.id}')" ondragover="handleDragOver(event)" ondrop="handleDrop('${e.id}')" ontouchstart="handleTouchStart(event, '${e.id}')" ontouchmove="handleTouchMove(event)" ontouchend="handleTouchEnd(event, '${e.id}')"` : '';
-            let rowClass = isReorderMode ? 'class="reorder-active-row"' : '';
             let categoryDisplay = e.category ? e.category : '—';
             
-            txList.insertAdjacentHTML('beforeend', `<tr ${rowClass} ${reorderAttrs}>
+            txList.insertAdjacentHTML('beforeend', `<tr>
                 <td style="color:var(--text-muted);">${prettyDate(e.date)}</td>
-                <td class="${isReorderMode ? '' : 'editable-cell'}" onclick="makeEditable(this, '${e.id}', 'desc')">${e.desc}</td>
-                <td class="val-${e.type} ${isReorderMode ? '' : 'editable-cell'}" onclick="makeEditable(this, '${e.id}', 'amount')">${prefix}${formatINR(e.amount)}</td>
+                <td class="editable-cell" onclick="makeEditable(this, '${e.id}', 'desc')">${e.desc}</td>
+                <td class="val-${e.type} editable-cell" onclick="makeEditable(this, '${e.id}', 'amount')">${prefix}${formatINR(e.amount)}</td>
                 <td style="color:var(--text-muted); user-select:none;">${categoryDisplay}</td>
-                <td style="${isReorderMode ? 'display:none;' : ''}">
+                <td>
                     <button class="btn-delete" onclick="deleteEntry('${e.id}')">Delete</button>
                 </td>
             </tr>`);
