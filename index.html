@@ -477,24 +477,46 @@
 
     function makeEditable(el, entryId, field) {
         if (isReorderMode || el.querySelector('input')) return;
+        
+        const originalHTML = el.innerHTML;
         const currentVal = el.innerText.replace('₹', '').replace(/,/g, '').replace('+', '').replace('-', '').trim();
+        
         const input = document.createElement('input');
         input.type = field === 'amount' ? 'number' : 'text';
         if(field === 'amount') input.step = '0.01';
         input.value = currentVal;
         
+        let hasSaved = false;
+
         const saveChanges = async () => {
-            if (field === 'amount') {
-                const parsed = parseFloat(input.value);
-                await db.collection("finance_data").doc(entryId).update({ amount: isNaN(parsed) ? 0 : parsed });
+            if (hasSaved) return;
+            hasSaved = true;
+            
+            const newRawValue = input.value.trim();
+            if (newRawValue !== "" && newRawValue !== currentVal) {
+                if (field === 'amount') {
+                    const parsed = parseFloat(newRawValue);
+                    await db.collection("finance_data").doc(entryId).update({ amount: isNaN(parsed) ? 0 : parsed });
+                } else {
+                    await db.collection("finance_data").doc(entryId).update({ desc: newRawValue });
+                }
             } else {
-                await db.collection("finance_data").doc(entryId).update({ desc: input.value.trim() });
+                el.innerHTML = originalHTML;
             }
         };
 
-        input.addEventListener('keydown', (e) => { if (e.key === 'Enter') saveChanges(); });
+        input.addEventListener('keydown', (e) => { 
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                saveChanges(); 
+            }
+        });
+        
         input.addEventListener('blur', saveChanges);
-        el.innerHTML = ''; el.appendChild(input); input.focus();
+        
+        el.innerHTML = ''; 
+        el.appendChild(input); 
+        input.focus();
     }
 
     function toggleReorderMode() {
@@ -517,7 +539,6 @@
         else draggedRowIndex = null;
     }
 
-    // Function updated to fix explicit touch drop targets natively
     function executeArrayShift(targetId) {
         const targetIndex = entries.findIndex(item => item.id === targetId);
         if (targetIndex !== -1 && targetIndex !== draggedRowIndex) {
@@ -549,7 +570,6 @@
 
         let tIn = 0, tOut = 0, netBalance = 0, dailyMap = {};
         
-        // Revised calculation engine parameters ensuring Normal transactions bypass card metrics but modify net metrics directly
         monthData.forEach(e => {
             if (e.type === 'income') {
                 tIn += e.amount;
@@ -630,6 +650,7 @@
         });
     }
 
+    // Dynamic Title handling embedded within scope mapping parameters explicitly
     function renderItemDetailsView(date) {
         const content = document.getElementById('analysis-content');
         const dayFilteredEntries = entries.filter(e => e.date === date);
