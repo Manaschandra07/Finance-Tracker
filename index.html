@@ -175,6 +175,11 @@
             box-shadow: 0 4px 24px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.03);
         }
         .form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; align-items: end; }
+        @media (min-width: 769px) {
+            .form-row { display: flex; flex-wrap: wrap; }
+            .form-row .input-group { flex: 1 1 150px; }
+            .form-row .add-btn-wrapper { margin-left: auto; min-width: 140px; align-self: flex-end; }
+        }
         .input-group label {
             color: var(--text-muted); font-weight: 600; font-size: 0.75rem;
             margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.07em;
@@ -219,7 +224,7 @@
         .tx-row { transition: background-color 0.15s; cursor: default; }
         .tx-row.pressing { background-color: rgba(193,18,31,0.08); }
 
-        .cash-label { font-size: 0.68rem; color: var(--text-muted); font-style: italic; margin-left: 5px; }
+        .cash-label { font-size: 0.68rem; color: var(--text-muted); margin-left: 5px; }
 
         .editable-cell { cursor: pointer; border-bottom: 1px dashed var(--border); transition: background-color 0.2s; border-radius: 4px; }
         .editable-cell:hover { background-color: rgba(30,96,145,0.12); }
@@ -273,10 +278,6 @@
         .btn-outline:hover { color: var(--text-main); border-color: var(--primary-hi); background: rgba(30,96,145,0.18); }
         #view-month { width: auto; min-width: 150px; }
 
-        .delete-hint {
-            font-size: 0.68rem; color: var(--text-muted); text-align: center;
-            margin-bottom: 8px; font-style: italic;
-        }
     </style>
 </head>
 <body>
@@ -347,8 +348,8 @@
                         <select id="f-type">
                             <option value="expense">Expense (-)</option>
                             <option value="income">Income (+)</option>
-                            <option value="normalpos">Normal (+)</option>
                             <option value="normalneg">Normal (-)</option>
+                            <option value="normalpos">Normal (+)</option>
                         </select>
                     </div>
                     <div class="input-group">
@@ -362,14 +363,15 @@
                             <option value="cash">Cash</option>
                         </select>
                     </div>
-                    <button type="submit" class="add-btn">Save Entry</button>
+                    <div class="input-group add-btn-wrapper">
+                        <button type="submit" class="add-btn">Save Entry</button>
+                    </div>
                 </form>
             </div>
 
             <div class="dashboard-grid">
                 <div class="panel">
                     <h3>Transaction History</h3>
-                    <p class="delete-hint">Hold any row for 1 second to delete</p>
                     <div class="search-container">
                         <input type="text" id="search-bar" class="search-input" placeholder="Search items..." oninput="renderHome()">
                     </div>
@@ -680,10 +682,11 @@
 
     function getMode(e) { return e.mode || 'online'; }
 
-    function makeEditable(el, entryId, field) {
+    function makeEditable(el, entryId, field, rawValue) {
         if (el.querySelector('input')) return;
         const originalHTML = el.innerHTML;
-        const currentVal = el.innerText.replace('\u20B9','').replace(/,/g,'').replace('+','').replace('-','').trim();
+        const currentVal = rawValue !== undefined ? rawValue :
+            el.innerText.replace('\u20B9','').replace(/,/g,'').replace('+','').replace('-','').trim();
         const input = document.createElement('input');
         input.type = field === 'amount' ? 'number' : 'text';
         if (field === 'amount') input.step = '0.01';
@@ -762,7 +765,7 @@
             row.className = 'tx-row';
             row.innerHTML = `
                 <td style="color:var(--text-muted);">${prettyDate(e.date)}</td>
-                <td class="editable-cell" onclick="makeEditable(this,'${e.id}','desc')">${e.desc}${cashTag}</td>
+                <td class="editable-cell" onclick="makeEditable(this,'${e.id}','desc',${JSON.stringify(e.desc)})">${e.desc}${cashTag}</td>
                 <td class="val-${t} editable-cell" onclick="makeEditable(this,'${e.id}','amount')">${prefix}${formatINR(e.amount)}</td>
                 <td style="color:var(--text-muted);user-select:none;">${categoryDisplay}</td>
             `;
@@ -824,7 +827,7 @@
             content.insertAdjacentHTML('beforeend', `<p style="color:var(--text-muted);">No expense data yet.</p>`);
             return;
         }
-        Object.keys(years).sort().reverse().forEach(yr => {
+        Object.keys(years).sort().forEach(yr => {
             content.insertAdjacentHTML('beforeend',
                 `<div class="list-item" onclick="navigateTo('analysis-months',{year:'${yr}'})">
                     <div><span style="font-weight:700;font-family:'Rajdhani',sans-serif;">${yr}</span><br>
@@ -850,7 +853,7 @@
             content.insertAdjacentHTML('beforeend', `<p style="color:var(--text-muted);">No expense data for ${year}.</p>`);
             return;
         }
-        Object.keys(months).sort().reverse().forEach(m => {
+        Object.keys(months).sort().forEach(m => {
             const [y, mo] = m.split('-');
             content.insertAdjacentHTML('beforeend',
                 `<div class="list-item" onclick="navigateTo('analysis-days',{mKey:'${m}'})">
@@ -872,7 +875,7 @@
         monthFilteredEntries.forEach(e => {
             if (resolveType(e) === 'expense') { days[e.date] = (days[e.date]||0) + e.amount; }
         });
-        Object.keys(days).sort().reverse().forEach(d => {
+        Object.keys(days).sort().forEach(d => {
             content.insertAdjacentHTML('beforeend',
                 `<div class="list-item" onclick="navigateTo('analysis-items',{date:'${d}'})">
                     <span>${prettyDate(d)}</span>
@@ -888,7 +891,7 @@
         content.innerHTML = `<button class="back-btn" onclick="window.history.back()">&#8592; Back</button><h1>${prettyDate(date)} Purchased Items</h1>` + buildInlineCategoryBreakdown(dayFilteredEntries);
         dayFilteredEntries.sort((a,b) => b.ts - a.ts).forEach(e => {
             if (resolveType(e) === 'expense') {
-                const cashTag = getMode(e) === 'cash' ? ` <span style="font-size:0.68rem;color:var(--text-muted);font-style:italic;">(cash)</span>` : '';
+                const cashTag = getMode(e) === 'cash' ? ` <span style="font-size:0.68rem;color:var(--text-muted);">(cash)</span>` : '';
                 content.insertAdjacentHTML('beforeend',
                     `<div class="list-item" style="cursor:default">
                         <span>${e.desc}${cashTag}</span>
