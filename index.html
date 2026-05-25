@@ -24,7 +24,7 @@
             --accent: #f59e0b;
         }
 
-        body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text-main); margin: 0; padding: 20px; padding-bottom: 90px; -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text-main); margin: 0; padding: 20px; padding-bottom: 90px; }
         .container { max-width: 1100px; margin: 0 auto; }
         
         .screen { display: none; animation: fadeIn 0.3s ease; }
@@ -49,13 +49,13 @@
 
         /* Header & Status */
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
-        .header h1 { color: var(--primary); margin: 0; font-size: 1.8rem; }
+        .header h1 { color: var(--primary); margin: 0; }
         .backup-status { font-size: 0.7rem; padding: 4px 10px; border-radius: 20px; border: 1px solid var(--border); background: #0f172a; color: var(--text-muted); margin-top: 5px; display: inline-block; }
         .backup-urgent { border-color: var(--expense); color: var(--expense); animation: pulse 2s infinite; }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
         
         /* Input Styling */
-        input, select { background: #0f172a; border: 1px solid var(--border); color: white; padding: 12px; border-radius: 8px; font-size: 0.95rem; width: 100%; box-sizing: border-box; outline: none; -webkit-appearance: none; }
+        input, select { background: #0f172a; border: 1px solid var(--border); color: white; padding: 12px; border-radius: 8px; font-size: 0.95rem; width: 100%; box-sizing: border-box; outline: none; }
         
         /* Stylish White Calendar Icon (15px) */
         input[type="date"], input[type="month"] {
@@ -75,45 +75,26 @@
 
         /* Form Section */
         .input-section { background: var(--card); padding: 25px; border-radius: 16px; margin-bottom: 30px; border: 1px solid var(--border); }
-        .form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; align-items: end; }
-        .input-group { display: flex; flex-direction: column; align-items: flex-start; width: 100%; }
+        .form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 20px; align-items: end; }
+        .input-group { display: flex; flex-direction: column; align-items: flex-start; }
         .input-group label { color: var(--text-muted); font-weight: 600; font-size: 0.85rem; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.05em; }
-        button.add-btn { background: var(--income); color: #000; border: none; padding: 12px; border-radius: 8px; font-weight: 700; cursor: pointer; height: 48px; width: 100%; font-size: 0.95rem; }
+        button.add-btn { background: var(--income); color: #000; border: none; padding: 12px; border-radius: 8px; font-weight: 700; cursor: pointer; height: 48px; width: 100%; }
 
         /* Dashboard Tables */
         .dashboard-grid { display: grid; grid-template-columns: 1.5fr 1fr; gap: 25px; }
+        
+        /* Ensures layout stacks on mobile devices */
         @media (max-width: 768px) {
             .dashboard-grid { grid-template-columns: 1fr; }
-            body { padding: 12px; padding-bottom: 90px; }
-            .header h1 { font-size: 1.5rem; }
         }
 
-        .panel { background: var(--card); padding: 25px; border-radius: 16px; border: 1px solid var(--border); overflow-x: auto; }
+        .panel { background: var(--card); padding: 25px; border-radius: 16px; border: 1px solid var(--border); }
         h3 { color: var(--primary); margin-top: 0; margin-bottom: 20px; }
         table { width: 100%; border-collapse: collapse; }
         th { text-align: left; color: var(--accent); font-size: 0.8rem; padding-bottom: 15px; text-transform: uppercase; }
         td { padding: 15px 5px; border-top: 1px solid var(--border); font-size: 0.95rem; }
         
-        .btn-delete { color: var(--expense); background: none; border: 1px solid var(--expense); padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 0.75rem; font-weight: bold; }
-        
-        /* Drag, drop, and inline edit interactive style rules */
-        .editable-cell { cursor: pointer; border-bottom: 1px dashed var(--border); transition: background-color 0.2s; }
-        .editable-cell:hover { background-color: rgba(56, 189, 248, 0.1); }
-        .editable-cell input { background: #0f172a; color: white; padding: 6px; font-size: 0.95rem; border: 1px solid var(--primary); border-radius: 4px; width: 100%; }
-        
-        .reorder-active-row { border: 2px dashed var(--primary) !important; background-color: rgba(56, 189, 248, 0.15) !important; cursor: grab; touch-action: none; }
-        .reorder-active-row:active { cursor: grabbing; }
-        .btn-toggle-reorder { background: none; border: 1px solid var(--border); color: var(--text-muted); padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.8rem; font-weight: bold; transition: 0.2s; white-space: nowrap; }
-        .btn-toggle-reorder.active-mode { color: #000; background-color: var(--accent); border-color: var(--accent); }
-
-        /* Custom 3-column row grid for Category Analysis breakdown layout */
-        .analysis-cat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 30px; margin-top: 15px; }
-        @media (max-width: 768px) {
-            .analysis-cat-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
-        }
-        @media (max-width: 480px) {
-            .analysis-cat-grid { grid-template-columns: 1fr; }
-        }
+        .btn-delete { color: var(--expense); background: none; border: 1px solid var(--expense); padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 0.75rem; font-weight: bold; }
 
         /* Lists & Search */
         .list-item { background: #1e293b; padding: 18px; border-radius: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; border: 1px solid var(--border); transition: 0.2s; }
@@ -121,11 +102,14 @@
         .rank-badge { background: var(--primary); color: #000; padding: 2px 10px; border-radius: 6px; margin-right: 10px; font-size: 0.8rem; font-weight: bold; }
         .val-income { color: var(--income); font-weight: bold; }
         .val-expense { color: var(--expense); font-weight: bold; }
-        .val-normal { color: var(--text-main); font-weight: bold; }
-        .back-btn { background: transparent; border: 1px solid var(--border); color: var(--text-muted); padding: 8px 15px; border-radius: 8px; cursor: pointer; margin-bottom: 20px; font-weight: bold; }
+        .back-btn { background: transparent; border: 1px solid var(--border); color: var(--text-muted); padding: 8px 15px; border-radius: 8px; cursor: pointer; margin-bottom: 20px; }
         
-        .search-container { margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; gap: 10px; position: relative; }
-        .search-input { padding-left: 35px; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z' /%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: 10px center; background-size: 18px; flex-grow: 1; }
+        .search-container { margin-bottom: 15px; position: relative; }
+        .search-input { padding-left: 35px; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z' /%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: 10px center; background-size: 18px; }
+        
+        .admin-tools { margin-top: 20px; display: flex; flex-wrap: wrap; gap: 10px; }
+        .btn-outline { background: none; border: 1px solid var(--border); color: var(--text-muted); padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 0.8rem; transition: 0.2s; }
+        .btn-outline:hover { color: white; border-color: white; }
     </style>
 </head>
 <body>
@@ -146,7 +130,7 @@
         <div class="stats-grid">
             <div class="stat-card"><div class="stat-label">Monthly Earned</div><div id="m-earned" class="stat-value val-income">₹0.00</div></div>
             <div class="stat-card"><div class="stat-label">Monthly Spent</div><div id="m-spent" class="stat-value val-expense">₹0.00</div></div>
-            <div class="stat-card"><div class="nav-item-trigger stat-label" style="cursor:default;">Monthly Net</div><div id="m-net" class="stat-value">₹0.00</div></div>
+            <div class="stat-card"><div class="stat-label">Monthly Net</div><div id="m-net" class="stat-value">₹0.00</div></div>
         </div>
 
         <div class="input-section">
@@ -158,13 +142,7 @@
                     <select id="f-type">
                         <option value="expense">Expense (-)</option>
                         <option value="income">Income (+)</option>
-                        <option value="normal">Normal ( )</option>
                     </select>
-                </div>
-                <div class="input-group">
-                    <label>Category</label>
-                    <select id="f-category" onchange="handleCategorySelection(this)">
-                        </select>
                 </div>
                 <button type="submit" class="add-btn">Save Entry</button>
             </form>
@@ -173,15 +151,12 @@
         <div class="dashboard-grid">
             <div class="panel">
                 <h3>Transaction History</h3>
-                <div class="search-container">
-                    <input type="text" id="search-bar" class="search-input" placeholder="Search items..." oninput="renderHome()">
-                    <button id="reorder-toggle-btn" class="btn-toggle-reorder" onclick="toggleReorderMode()">Reorder Mode: OFF</button>
-                </div>
-                <table><thead><tr><th>Date</th><th>Item</th><th>Amount</th><th>Category</th><th id="th-action-header">Action</th></tr></thead><tbody id="tx-list"></tbody></table>
-                <div class="admin-tools" style="margin-top: 20px; display: flex; flex-wrap: wrap; gap: 10px;">
-                    <button class="btn-outline" style="background: none; border: 1px solid var(--border); color: var(--text-muted); padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 0.8rem;" onclick="exportCSV()">Export Backup (.csv)</button>
-                    <button class="btn-outline" style="background: none; border: 1px solid var(--border); color: var(--text-muted); padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 0.8rem;" onclick="emailBackup()">Send to Email</button>
-                    <button class="btn-outline" style="background: none; border: 1px solid var(--border); color: var(--text-muted); padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 0.8rem;" onclick="document.getElementById('import-file').click()">Import Backup</button>
+                <div class="search-container"><input type="text" id="search-bar" class="search-input" placeholder="Search items..." oninput="renderHome()"></div>
+                <table><thead><tr><th>Date</th><th>Item</th><th>Amount</th><th>Action</th></tr></thead><tbody id="tx-list"></tbody></table>
+                <div class="admin-tools">
+                    <button class="btn-outline" onclick="exportCSV()">Export Backup (.csv)</button>
+                    <button class="btn-outline" onclick="emailBackup()">Send to Email</button>
+                    <button class="btn-outline" onclick="document.getElementById('import-file').click()">Import Backup</button>
                     <input type="file" id="import-file" style="display:none" accept=".csv" onchange="importCSV(this)">
                 </div>
             </div>
@@ -197,18 +172,13 @@
 </div>
 
 <nav class="bottom-nav">
-    <button id="nav-btn-home" class="nav-item active" onclick="handleNavClick('home')"><svg class="nav-icon" viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg><span>HOME</span></button>
-    <button id="nav-btn-analysis" class="nav-item" onclick="handleNavClick('analysis')"><svg class="nav-icon" viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/></svg><span>ANALYSIS</span></button>
+    <button class="nav-item active" onclick="switchTab('home', this)"><svg class="nav-icon" viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg><span>HOME</span></button>
+    <button class="nav-item" onclick="switchTab('analysis', this)"><svg class="nav-icon" viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/></svg><span>ANALYSIS</span></button>
 </nav>
 
 <script>
     let entries = JSON.parse(localStorage.getItem('clean_tracker_v1')) || [];
-    let customCategories = JSON.parse(localStorage.getItem('clean_tracker_categories')) || [];
     let lastBackup = localStorage.getItem('last_backup_date') || null;
-    let isReorderMode = false;
-    let draggedRowIndex = null;
-    let longPressTimer = null;
-    let touchStartY = 0;
     const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
     const today = new Date();
@@ -218,249 +188,24 @@
     function formatINR(amount) { return '₹' + parseFloat(amount).toLocaleString('en-IN', { minimumFractionDigits: 2 }); }
     function prettyDate(dateStr) { const [y, m, d] = dateStr.split('-'); return `${d}-${m}-${y}`; }
 
-    function populateCategories() {
-        const select = document.getElementById('f-category');
-        select.innerHTML = `
-            <option value="Food">Food</option>
-            <option value="Entertainment">Entertainment</option>
-            <option value="Loan">Loan</option>
-            <option value="Friends">Friends</option>
-        `;
-        customCategories.forEach(cat => {
-            // Modification applied here: removed the text indicator display label block context wrapper strings
-            select.insertAdjacentHTML('beforeend', `<option value="${cat}">${cat}</option>`);
-        });
-        select.insertAdjacentHTML('beforeend', `<option value="Custom">Custom...</option>`);
-        
-        select.removeEventListener('mousedown', startPressTimer);
-        select.removeEventListener('mouseup', clearPressTimer);
-        select.removeEventListener('mouseleave', clearPressTimer);
-        select.removeEventListener('touchstart', startPressTimer);
-        select.removeEventListener('touchend', clearPressTimer);
-
-        select.addEventListener('mousedown', startPressTimer);
-        select.addEventListener('mouseup', clearPressTimer);
-        select.addEventListener('mouseleave', clearPressTimer);
-        select.addEventListener('touchstart', startPressTimer, {passive: true});
-        select.addEventListener('touchend', clearPressTimer);
-    }
-
-    function startPressTimer(e) {
-        clearPressTimer();
-        const selectEl = document.getElementById('f-category');
-        const selectedValue = selectEl.value;
-
-        if (customCategories.includes(selectedValue)) {
-            longPressTimer = setTimeout(() => {
-                if (confirm(`Do you want to completely delete the custom category "${selectedValue}"?`)) {
-                    customCategories = customCategories.filter(cat => cat !== selectedValue);
-                    localStorage.setItem('clean_tracker_categories', JSON.stringify(customCategories));
-                    populateCategories();
-                    selectEl.value = 'Food';
-                }
-            }, 1000);
-        }
-    }
-
-    function clearPressTimer() {
-        if (longPressTimer) {
-            clearTimeout(longPressTimer);
-            longPressTimer = null;
-        }
-    }
-
-    function handleCategorySelection(selectEl) {
-        if (selectEl.value === 'Custom') {
-            const newCat = prompt("Enter custom category name:");
-            if (newCat && newCat.trim() !== '') {
-                const cleanedCat = newCat.trim();
-                if (!['Food', 'Entertainment', 'Loan', 'Friends', 'Custom'].includes(cleanedCat) && !customCategories.includes(cleanedCat)) {
-                    customCategories.push(cleanedCat);
-                    localStorage.setItem('clean_tracker_categories', JSON.stringify(customCategories));
-                    populateCategories();
-                    selectEl.value = cleanedCat;
-                } else {
-                    alert("Category name already exists or is invalid.");
-                    selectEl.value = 'Food';
-                }
-            } else {
-                selectEl.value = 'Food';
-            }
-        }
-    }
-
-    function viewRankDayDetails(dateStr) {
-        navigateTo('analysis-items', { date: dateStr });
-    }
-
-    function handleNavClick(tabId) {
-        if (tabId === 'home') {
-            navigateTo('home');
-        } else if (tabId === 'analysis') {
-            navigateTo('analysis-months');
-        }
-    }
-
-    function navigateTo(viewId, params = {}, pushState = true) {
-        if (isReorderMode && viewId !== 'home') {
-            toggleReorderMode();
-        }
-
+    function switchTab(screenId, btn) {
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
         document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-
-        if (pushState) {
-            window.history.pushState({ viewId, params }, '', '');
-        }
-
+        document.getElementById(`screen-${screenId}`).classList.add('active');
+        btn.classList.add('active');
         window.scrollTo(0,0);
-
-        if (viewId === 'home') {
-            document.getElementById('screen-home').classList.add('active');
-            document.getElementById('nav-btn-home').classList.add('active');
-            renderHome();
-        } else {
-            document.getElementById('screen-analysis').classList.add('active');
-            document.getElementById('nav-btn-analysis').classList.add('active');
-            
-            if (viewId === 'analysis-months') {
-                renderMonthlyAnalysisView();
-            } else if (viewId === 'analysis-days') {
-                renderDailyAnalysisView(params.mKey);
-            } else if (viewId === 'analysis-items') {
-                renderItemDetailsView(params.date);
-            }
-        }
+        if(screenId === 'home') renderHome(); else renderMonthlyAnalysis();
     }
-
-    window.addEventListener('popstate', (e) => {
-        if (e.state && e.state.viewId) {
-            navigateTo(e.state.viewId, e.state.params, false);
-        } else {
-            navigateTo('home', {}, false);
-        }
-    });
-
-    window.history.replaceState({ viewId: 'home', params: {} }, '', '');
 
     document.getElementById('finance-form').addEventListener('submit', (e) => {
         e.preventDefault();
-        entries.push({ 
-            id: Date.now(), 
-            date: document.getElementById('f-date').value, 
-            desc: document.getElementById('f-desc').value, 
-            category: document.getElementById('f-category').value,
-            amount: parseFloat(document.getElementById('f-amount').value), 
-            type: document.getElementById('f-type').value 
-        });
+        entries.push({ id: Date.now(), date: document.getElementById('f-date').value, desc: document.getElementById('f-desc').value, amount: parseFloat(document.getElementById('f-amount').value), type: document.getElementById('f-type').value });
         save();
         e.target.reset();
         document.getElementById('f-date').valueAsDate = new Date();
-        populateCategories();
     });
 
     function deleteEntry(id) { if(confirm("Delete this entry?")) { entries = entries.filter(e => e.id !== id); save(); } }
-
-    function makeEditable(el, entryId, field) {
-        if (isReorderMode || el.querySelector('input')) return;
-        const currentVal = el.innerText.replace('₹', '').replace(/,/g, '').replace('+', '').replace('-', '').trim();
-        const input = document.createElement('input');
-        input.type = field === 'amount' ? 'number' : 'text';
-        if(field === 'amount') input.step = '0.01';
-        input.value = currentVal;
-        
-        const saveChanges = () => {
-            const index = entries.findIndex(e => e.id === entryId);
-            if (index !== -1) {
-                if (field === 'amount') {
-                    const parsed = parseFloat(input.value);
-                    entries[index].amount = isNaN(parsed) ? 0 : parsed;
-                } else {
-                    entries[index].desc = input.value.trim() || entries[index].desc;
-                }
-                save();
-            }
-        };
-
-        input.addEventListener('keydown', (e) => { if (e.key === 'Enter') saveChanges(); });
-        input.addEventListener('blur', saveChanges);
-        el.innerHTML = '';
-        el.appendChild(input);
-        input.focus();
-    }
-
-    function toggleReorderMode() {
-        isReorderMode = !isReorderMode;
-        const btn = document.getElementById('reorder-toggle-btn');
-        const thAction = document.getElementById('th-action-header');
-        
-        if (isReorderMode) {
-            btn.innerText = "Reorder Mode: ON";
-            btn.classList.add('active-mode');
-            thAction.style.display = 'none';
-        } else {
-            btn.innerText = "Reorder Mode: OFF";
-            btn.classList.remove('active-mode');
-            thAction.style.display = '';
-        }
-        renderHome();
-    }
-
-    function handleDragStart(e, id) {
-        if (!isReorderMode) return;
-        draggedRowIndex = entries.findIndex(item => item.id === id);
-        e.dataTransfer.effectAllowed = 'move';
-    }
-
-    function handleDragOver(e) {
-        if (!isReorderMode) return;
-        e.preventDefault();
-    }
-
-    function handleDrop(e, targetId) {
-        if (!isReorderMode || draggedRowIndex === null) return;
-        e.preventDefault();
-        executeArrayShift(targetId);
-    }
-
-    function handleTouchStart(e, id) {
-        if (!isReorderMode) return;
-        draggedRowIndex = entries.findIndex(item => item.id === id);
-        touchStartY = e.touches[0].clientY;
-    }
-
-    function handleTouchMove(e) {
-        if (!isReorderMode || draggedRowIndex === null) return;
-        e.preventDefault();
-    }
-
-    function handleTouchEnd(e, targetId) {
-        if (!isReorderMode || draggedRowIndex === null) return;
-        const touchEndY = e.changedTouches[0].clientY;
-        if (Math.abs(touchStartY - touchEndY) > 10) {
-            executeArrayShift(targetId);
-        } else {
-            draggedRowIndex = null;
-        }
-    }
-
-    function executeArrayShift(targetId) {
-        const targetIndex = entries.findIndex(item => item.id === targetId);
-        if (targetIndex !== -1 && targetIndex !== draggedRowIndex) {
-            const [movedItem] = entries.splice(draggedRowIndex, 1);
-            entries.splice(targetIndex, 0, movedItem);
-            save();
-        }
-        draggedRowIndex = null;
-    }
-
-    function getSortedDisplayList(filteredList) {
-        if (isReorderMode) {
-            const indexMap = new Map(entries.map((item, idx) => [item.id, idx]));
-            return [...filteredList].sort((a, b) => indexMap.get(a.id) - indexMap.get(b.id));
-        }
-        return [...filteredList].sort((a, b) => new Date(b.date) - new Date(a.date));
-    }
 
     function save() {
         localStorage.setItem('clean_tracker_v1', JSON.stringify(entries));
@@ -484,29 +229,16 @@
         txList.innerHTML = ''; rankList.innerHTML = '';
 
         const monthData = entries.filter(e => e.date.startsWith(selMonth));
-        const filtered = monthData.filter(e => e.desc.toLowerCase().includes(query) || (e.category && e.category.toLowerCase().includes(query)));
+        const filtered = monthData.filter(e => e.desc.toLowerCase().includes(query));
 
         let tIn = 0, tOut = 0, dailyMap = {};
         monthData.forEach(e => {
             if(e.type === 'income') tIn += e.amount;
-            else if(e.type === 'expense') { tOut += e.amount; dailyMap[e.date] = (dailyMap[e.date] || 0) + e.amount; }
+            else { tOut += e.amount; dailyMap[e.date] = (dailyMap[e.date] || 0) + e.amount; }
         });
 
-        getSortedDisplayList(filtered).forEach(e => {
-            let prefix = e.type === 'income' ? '+' : (e.type === 'expense' ? '-' : '');
-            let reorderAttrs = isReorderMode ? `draggable="true" ondragstart="handleDragStart(event, ${e.id})" ondragover="handleDragOver(event)" ondrop="handleDrop(event, ${e.id})" ontouchstart="handleTouchStart(event, ${e.id})" ontouchmove="handleTouchMove(event)" ontouchend="handleTouchEnd(event, ${e.id})"` : '';
-            let rowClass = isReorderMode ? 'class="reorder-active-row"' : '';
-            let categoryDisplay = e.category ? e.category : '—';
-            
-            txList.insertAdjacentHTML('beforeend', `<tr ${rowClass} ${reorderAttrs}>
-                <td style="color:var(--text-muted); user-select:none;">${prettyDate(e.date)}</td>
-                <td class="${isReorderMode ? '' : 'editable-cell'}" onclick="makeEditable(this, ${e.id}, 'desc')">${e.desc}</td>
-                <td class="val-${e.type} ${isReorderMode ? '' : 'editable-cell'}" onclick="makeEditable(this, ${e.id}, 'amount')">${prefix}${formatINR(e.amount)}</td>
-                <td style="color:var(--text-muted); user-select:none;">${categoryDisplay}</td>
-                <td style="${isReorderMode ? 'display:none;' : ''}">
-                    <button class="btn-delete" onclick="deleteEntry(${e.id})">Delete</button>
-                </td>
-            </tr>`);
+        filtered.sort((a,b) => new Date(b.date) - new Date(a.date)).forEach(e => {
+            txList.insertAdjacentHTML('beforeend', `<tr><td style="color:var(--text-muted)">${prettyDate(e.date)}</td><td>${e.desc}</td><td class="val-${e.type}">${e.type === 'income' ? '+' : '-'}${formatINR(e.amount)}</td><td><button class="btn-delete" onclick="deleteEntry(${e.id})">Delete</button></td></tr>`);
         });
 
         document.getElementById('m-earned').innerText = formatINR(tIn);
@@ -518,84 +250,42 @@
 
         const rankedDays = Object.keys(dailyMap).map(d => ({ date: d, total: dailyMap[d] })).sort((a,b) => b.total - a.total);
         rankedDays.forEach((day, i) => {
-            rankList.insertAdjacentHTML('beforeend', `<div class="list-item" style="padding:10px;margin-bottom:8px;" onclick="viewRankDayDetails('${day.date}')"><span><span class="rank-badge">#${i+1}</span> ${prettyDate(day.date)}</span><span class="val-expense">${formatINR(day.total)}</span></div>`);
+            rankList.insertAdjacentHTML('beforeend', `<div class="list-item" style="padding:10px;margin-bottom:8px;"><span><span class="rank-badge">#${i+1}</span> ${prettyDate(day.date)}</span><span class="val-expense">${formatINR(day.total)}</span></div>`);
         });
     }
 
-    function buildInlineCategoryBreakdown(filteredEntries) {
-        let catMap = {};
-        filteredEntries.forEach(e => {
-            if (e.type === 'expense') {
-                let cat = e.category || 'Uncategorized';
-                catMap[cat] = (catMap[cat] || 0) + e.amount;
-            }
-        });
-        
-        let cardsHTML = '';
-        Object.keys(catMap).sort((a,b) => catMap[b] - catMap[a]).forEach(cat => {
-            cardsHTML += `
-                <div class="stat-card">
-                    <div class="stat-label">${cat}</div>
-                    <div class="stat-value val-expense">${formatINR(catMap[cat])}</div>
-                </div>`;
-        });
-        
-        return cardsHTML ? `<div class="analysis-cat-grid">${cardsHTML}</div>` : '';
-    }
-
-    function renderMonthlyAnalysisView() {
+    function renderMonthlyAnalysis() {
         const content = document.getElementById('analysis-content');
-        let heading = '<h1>Monthly Analysis</h1>';
-        let breakdown = buildInlineCategoryBreakdown(entries);
-        content.innerHTML = heading + breakdown;
-
+        content.innerHTML = '<h1>Monthly Analysis</h1>';
         let months = {};
         entries.forEach(e => { if(e.type === 'expense') { const m = e.date.substring(0,7); months[m] = (months[m] || 0) + e.amount; } });
         Object.keys(months).sort().reverse().forEach(m => {
             const [y, mo] = m.split('-');
-            content.insertAdjacentHTML('beforeend', `<div class="list-item" onclick="navigateTo('analysis-days', { mKey: '${m}' })"><div><span style="font-weight:700">${monthNames[parseInt(mo)-1]} ${y}</span><br><small style="color:var(--text-muted)">Total Monthly Spend</small></div><span class="val-expense">${formatINR(months[m])}</span></div>`);
+            content.insertAdjacentHTML('beforeend', `<div class="list-item" onclick="renderDailyAnalysis('${m}')"><div><span style="font-weight:700">${monthNames[parseInt(mo)-1]} ${y}</span><br><small style="color:var(--text-muted)">Total Monthly Spend</small></div><span class="val-expense">${formatINR(months[m])}</span></div>`);
         });
     }
 
-    function renderDailyAnalysisView(mKey) {
+    function renderDailyAnalysis(mKey) {
         const content = document.getElementById('analysis-content');
-        const monthFilteredEntries = entries.filter(e => e.date.startsWith(mKey));
-        
-        const [y, mo] = mKey.split('-');
-        const monthNameWithYear = `${monthNames[parseInt(mo)-1]} ${y}`;
-
-        let backBtn = `<button class="back-btn" onclick="window.history.back()">⬅ Back to Months</button>`;
-        let heading = `<h1>${monthNameWithYear} Daily Analysis</h1>`;
-        let breakdown = buildInlineCategoryBreakdown(monthFilteredEntries);
-        content.innerHTML = backBtn + heading + breakdown;
-
+        content.innerHTML = `<button class="back-btn" onclick="renderMonthlyAnalysis()">⬅ Back to Months</button><h1>Daily Analysis</h1>`;
         let days = {};
-        monthFilteredEntries.forEach(e => { if(e.type === 'expense') { days[e.date] = (days[e.date] || 0) + e.amount; } });
+        entries.filter(e => e.date.startsWith(mKey) && e.type === 'expense').forEach(e => { days[e.date] = (days[e.date] || 0) + e.amount; });
         Object.keys(days).sort().reverse().forEach(d => {
-            content.insertAdjacentHTML('beforeend', `<div class="list-item" onclick="navigateTo('analysis-items', { date: '${d}' })"><span>${prettyDate(d)}</span><span class="val-expense">${formatINR(days[d])}</span></div>`);
+            content.insertAdjacentHTML('beforeend', `<div class="list-item" onclick="renderItemDetails('${d}')"><span>${prettyDate(d)}</span><span class="val-expense">${formatINR(days[d])}</span></div>`);
         });
     }
 
-    function renderItemDetailsView(date) {
+    function renderItemDetails(date) {
         const content = document.getElementById('analysis-content');
-        const dayFilteredEntries = entries.filter(e => e.date === date);
-        const formattedDateStr = prettyDate(date);
-        
-        let backBtn = `<button class="back-btn" onclick="window.history.back()">⬅ Back</button>`;
-        let heading = `<h1>${formattedDateStr} Purchased Items</h1>`;
-        let breakdown = buildInlineCategoryBreakdown(dayFilteredEntries);
-        content.innerHTML = backBtn + heading + breakdown;
-
-        dayFilteredEntries.forEach(e => {
-            if(e.type === 'expense') {
-                content.insertAdjacentHTML('beforeend', `<div class="list-item" style="cursor:default"><span>${e.desc}</span><span class="val-expense">${formatINR(e.amount)}</span></div>`);
-            }
+        content.innerHTML = `<button class="back-btn" onclick="renderDailyAnalysis('${date.substring(0,7)}')">⬅ Back to Daily</button><h1>Purchased Items</h1>`;
+        entries.filter(e => e.date === date && e.type === 'expense').forEach(e => {
+            content.insertAdjacentHTML('beforeend', `<div class="list-item" style="cursor:default"><span>${e.desc}</span><span class="val-expense">${formatINR(e.amount)}</span></div>`);
         });
     }
 
     function generateCSVString() {
-        let csv = "Date,Description,Category,Amount,Type\n";
-        entries.forEach(e => { csv += `${e.date},${e.desc},${e.category || ''},${e.amount},${e.type}\n`; });
+        let csv = "Date,Description,Amount,Type\n";
+        entries.forEach(e => { csv += `${e.date},${e.desc},${e.amount},${e.type}\n`; });
         return csv;
     }
 
@@ -624,18 +314,14 @@
         reader.onload = function() {
             const rows = reader.result.split('\n').slice(1);
             const newEntries = rows.filter(r => r.trim()).map(row => {
-                const [date, desc, category, amount, type] = row.split(',');
-                if (type === undefined) {
-                    return { id: Date.now() + Math.random(), date, desc, category: '', amount: parseFloat(category), type: amount.trim() };
-                }
-                return { id: Date.now() + Math.random(), date, desc, category, amount: parseFloat(amount), type: type.trim() };
+                const [date, desc, amount, type] = row.split(',');
+                return { id: Date.now() + Math.random(), date, desc, amount: parseFloat(amount), type: type.trim() };
             });
             if(confirm(`Import ${newEntries.length} items?`)) { entries = [...entries, ...newEntries]; save(); }
         };
         reader.readAsText(input.files[0]);
     }
 
-    populateCategories();
     renderHome();
     updateBackupStatus();
 </script>
