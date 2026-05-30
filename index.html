@@ -47,7 +47,12 @@
         .screen.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
 
-        #screen-auth { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 80vh; text-align: center; }
+        /* Auth screen - explicit flex, not dependent on .screen class */
+        #screen-auth {
+            display: none; flex-direction: column; align-items: center;
+            justify-content: center; min-height: 80vh; text-align: center;
+        }
+        #screen-auth.active { display: flex; }
         #screen-auth h1 {
             font-family: 'Rajdhani', sans-serif; font-size: 2.6rem; font-weight: 700;
             color: var(--primary-hi); letter-spacing: 0.06em;
@@ -224,6 +229,17 @@
         .tx-row { transition: background-color 0.15s; cursor: default; }
         .tx-row.pressing { background-color: rgba(193,18,31,0.08); }
         .tx-row.dragging { opacity: 0.28; background: rgba(30,96,145,0.06); }
+        /* Bug 3 fix: prevent scroll competing with drag in reorder mode */
+        #tx-table.reorder-active .tx-row { touch-action: none; }
+
+        /* Bug 2 fix: horizontal scroll wrapper for table on mobile */
+        .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+        /* Bug 5 fix: hide category column on narrow screens */
+        @media (max-width: 600px) {
+            .col-category { display: none; }
+            td { padding: 11px 4px; font-size: 0.85rem; }
+        }
 
         .drag-handle-cell {
             width: 28px; padding: 0 6px !important; text-align: center;
@@ -412,7 +428,9 @@
                     <div class="search-container">
                         <input type="text" id="search-bar" class="search-input" placeholder="Search items..." oninput="renderHome()">
                     </div>
-                    <table id="tx-table"><thead><tr><th class="drag-col-th"></th><th>Date</th><th>Description</th><th>Amount</th><th>Category</th></tr></thead><tbody id="tx-list"></tbody></table>
+                    <div class="table-wrapper">
+                    <table id="tx-table"><thead><tr><th class="drag-col-th"></th><th>Date</th><th>Description</th><th>Amount</th><th class="col-category">Category</th></tr></thead><tbody id="tx-list"></tbody></table>
+                    </div>
                     <div class="admin-tools">
                         <button class="btn-outline" onclick="exportCSV()">Export Backup (.csv)</button>
                         <button class="btn-outline" onclick="document.getElementById('import-file').click()">Import Backup</button>
@@ -509,6 +527,7 @@
         const navBar    = document.getElementById('app-nav');
         if (user) {
             authScreen.style.display = 'none';
+            authScreen.classList.remove('active');
             mainApp.style.display = 'block';
             navBar.style.display = 'flex';
             if (user.isAnonymous) {
@@ -524,7 +543,8 @@
             }
             startSync(user.uid);
         } else {
-            authScreen.style.display = 'flex';
+            authScreen.style.display = '';
+            authScreen.classList.add('active');
             mainApp.style.display = 'none';
             navBar.style.display = 'none';
             entries = [];
@@ -676,10 +696,15 @@
 
         const onStart = (e) => {
             armed = false;
+            // Bug 1 fix: capture coords synchronously - e.touches is cleared by browser after handler returns
+            const t0 = e.touches[0];
+            if (!t0) return;
+            const startX = t0.clientX;
+            const startY = t0.clientY;
             pressTimer = setTimeout(() => {
                 armed = true;
                 if (navigator.vibrate) navigator.vibrate(40);
-                beginDrag(row, e.touches[0], rowIdx);
+                beginDrag(row, { clientX: startX, clientY: startY }, rowIdx);
             }, 380);
         };
         const onMove = (e) => {
@@ -720,6 +745,8 @@
     function onDragMove(e) {
         if (!dragState) return;
         e.preventDefault();
+        // Bug 4 fix: guard against empty touches list
+        if (!e.touches || !e.touches[0]) return;
         const touch = e.touches[0];
 
         dragState.ghost.style.top = (touch.clientY - 30) + 'px';
@@ -998,7 +1025,7 @@
                 <td style="color:var(--text-muted);">${prettyDate(e.date)}</td>
                 <td class="editable-cell" onclick="makeEditable(this,'${e.id}','desc',${JSON.stringify(e.desc)})">${e.desc}${cashTag}</td>
                 <td class="val-${t} editable-cell" onclick="makeEditable(this,'${e.id}','amount')">${prefix}${formatINR(e.amount)}</td>
-                <td style="color:var(--text-muted);user-select:none;">${categoryDisplay}</td>
+                <td class="col-category" style="color:var(--text-muted);user-select:none;">${categoryDisplay}</td>
             `;
             if (reorderMode) {
                 attachTouchDrag(row, rowIndex);
