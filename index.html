@@ -982,10 +982,10 @@
             }
         });
 
-        // Apply ordering — custom order takes priority when no search query active
+        // Apply ordering — custom order only active while Reorder Mode is ON
         const user     = auth.currentUser;
         const orderKey = user ? user.uid + '_' + selMonth : null;
-        const savedOrder = orderKey ? (customOrders[orderKey] || null) : null;
+        const savedOrder = (reorderMode && orderKey) ? (customOrders[orderKey] || null) : null;
 
         if (savedOrder && !query) {
             const orderMap = {};
