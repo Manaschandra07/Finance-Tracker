@@ -499,7 +499,6 @@
     let longPressTimer = null;
     let rowPressTimer = null;
     let unsubsFirestore = null;
-    let unsubSettings   = null;
     let cashStatsVisible = false;
     let txOrderDesc = true; // true = latest first, false = oldest first
     let reorderMode = false;
@@ -517,8 +516,6 @@
     }
     function logout() {
         if(unsubsFirestore) { unsubsFirestore(); unsubsFirestore = null; }
-        if(unsubSettings)   { unsubSettings();  unsubSettings  = null; }
-        customOrders = {};
         auth.signOut();
         if(document.getElementById('profile-menu').classList.contains('active')) toggleProfile();
     }
@@ -545,7 +542,6 @@
                 document.getElementById('backup-reminder').innerText = "Cloud Synced";
             }
             startSync(user.uid);
-            if (!user.isAnonymous) startSettingsSync(user.uid);
         } else {
             authScreen.style.display = '';
             authScreen.classList.add('active');
@@ -565,21 +561,6 @@
             populateCategories();
             renderHome();
         });
-    }
-
-    // Real-time sync of custom order across devices via Firestore
-    function startSettingsSync(uid) {
-        if (unsubSettings) { unsubSettings(); unsubSettings = null; }
-        unsubSettings = db.collection('finance_settings').doc(uid).onSnapshot(doc => {
-            if (doc.exists) {
-                const incoming = doc.data().monthOrders || {};
-                // Merge incoming with local — Firestore wins on conflict
-                customOrders = incoming;
-                localStorage.setItem('ft_custom_orders', JSON.stringify(customOrders));
-                // Re-render if reorder mode is currently active so the synced order shows
-                if (reorderMode) renderHome();
-            }
-        }, err => { console.warn('Settings sync error:', err.message); });
     }
 
     function populateCategories() {
@@ -703,15 +684,7 @@
         if (!user) return;
         const key = user.uid + '_' + selMonth;
         customOrders[key] = [...currentDisplayOrder];
-        // Always keep localStorage as local cache
         localStorage.setItem('ft_custom_orders', JSON.stringify(customOrders));
-        // Sync to Firestore for cross-device access (non-guest only)
-        if (!user.isAnonymous) {
-            db.collection('finance_settings').doc(user.uid).set(
-                { monthOrders: customOrders },
-                { merge: true }
-            ).catch(err => console.warn('Order sync failed:', err.message));
-        }
     }
 
     // --- DRAG ---
