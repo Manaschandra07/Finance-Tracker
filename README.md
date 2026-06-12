@@ -21,8 +21,8 @@ A sleek, mobile-friendly, and cloud-synced personal finance management web appli
 
 ## Usage Guide
 
-* **Adding an Entry: Fill out the input form on the Home screen and click "Save Entry".
-* **Editing: Click directly on the description or amount in the transaction table to edit them inline. Press Enter or click outside the box to save your changes.
-* **Deleting: Long-press (on mobile) or right-click (on desktop) a transaction row to prompt a deletion confirmation.
-* **Custom Categories: Select "Custom..." from the category dropdown to add a new personalized tag. To delete a custom category, long-press it in the dropdown menu.
-* **Analysis: Navigate to the "Analysis" tab using the bottom navigation bar to view your spending grouped by year, month, and day.
+* **Adding an Entry:**  Fill out the input form on the Home screen and click "Save Entry".
+* **Editing:**  Click directly on the description or amount in the transaction table to edit them inline. Press Enter or click outside the box to save your changes.
+* **Deleting:**  Long-press (on mobile) or right-click (on desktop) a transaction row to prompt a deletion confirmation.
+* **Custom Categories:**  Select "Custom..." from the category dropdown to add a new personalized tag. To delete a custom category, long-press it in the dropdown menu.
+* **Analysis:**  Navigate to the "Analysis" tab using the bottom navigation bar to view your spending grouped by year, month, and day.
